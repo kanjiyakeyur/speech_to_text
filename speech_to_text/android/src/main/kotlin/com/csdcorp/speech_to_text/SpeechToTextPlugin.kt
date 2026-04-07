@@ -276,6 +276,7 @@ public class SpeechToTextPlugin :
         minRms = 1000.0F
         maxRms = -100.0F
         debugLog("Start listening")
+        debugLog("localeId(from Package): $languageTag")
 
         optionallyStartBluetooth()
         setupRecognizerIntent(languageTag, partialResults, listenMode, onDevice )
