@@ -471,7 +471,7 @@ public class SpeechToTextPlugin :
         val permissionToEnableBluetooth = ContextCompat.checkSelfPermission(localContext,
                 Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
         bluetoothDisabled = !permissionToEnableBluetooth || noBluetoothOpt
-        debugLog("Checked permission")
+        debugLog("Checked permission: recordAudio=$permissionToRecordAudio, bluetoothConnect=$permissionToEnableBluetooth, bluetoothDisabled=$bluetoothDisabled, noBluetoothOpt=$noBluetoothOpt")
         if (!permissionToRecordAudio) {
             val localActivity = currentActivity
             if (null != localActivity) {
