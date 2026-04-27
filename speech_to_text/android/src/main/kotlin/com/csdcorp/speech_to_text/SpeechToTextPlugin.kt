@@ -719,7 +719,11 @@ public class SpeechToTextPlugin :
         if ( SpeechRecognizer.ERROR_NO_MATCH == errorCode && maxRms < speechThresholdRms ) {
             errorReturn = SpeechRecognizer.ERROR_SPEECH_TIMEOUT
         }
-        debugLog( "Error $errorCode after start at $delta $minRms / $maxRms")
+        try {
+            debugLog("STT Error: errorCode=$errorCode, errorReturn=$errorReturn, elapsedMs=$delta, minRms=$minRms, maxRms=$maxRms, speechThresholdRms=$speechThresholdRms, onDevice=$lastOnDevice, lang=$previousRecognizerLang, bluetoothDisabled=$bluetoothDisabled, btHeadset=${bluetoothHeadset != null}, activeBluetooth=$activeBluetooth")
+        } catch (e: Exception) {
+            debugLog("STT Error: errorCode=$errorCode, errorReturn=$errorReturn (log detail failed: ${e.message})")
+        }
         val errorMsg = when (errorReturn) {
             SpeechRecognizer.ERROR_AUDIO -> "error_audio_error"
             SpeechRecognizer.ERROR_CLIENT -> "error_client"
