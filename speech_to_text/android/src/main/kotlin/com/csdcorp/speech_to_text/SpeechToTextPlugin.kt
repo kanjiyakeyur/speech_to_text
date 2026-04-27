@@ -494,16 +494,16 @@ public class SpeechToTextPlugin :
 
     private fun completeInitialize() {
 
-        debugLog("completeInitialize")
+        debugLog("completeInitialize: permissionToRecordAudio=$permissionToRecordAudio")
         if (permissionToRecordAudio) {
-            debugLog("Testing recognition availability")
+            debugLog("Testing recognition availability, SDK_INT=${Build.VERSION.SDK_INT}, SDK_S=${Build.VERSION_CODES.S}")
             val localContext = pluginContext
             if (localContext != null) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    if (!SpeechRecognizer.isRecognitionAvailable(localContext) && !SpeechRecognizer.isOnDeviceRecognitionAvailable(
-                            localContext
-                        )
-                    ) {
+                    val isRecognitionAvailable = SpeechRecognizer.isRecognitionAvailable(localContext)
+                    val isOnDeviceAvailable = SpeechRecognizer.isOnDeviceRecognitionAvailable(localContext)
+                    debugLog("SDK>=S: isRecognitionAvailable=$isRecognitionAvailable, isOnDeviceAvailable=$isOnDeviceAvailable")
+                    if (!isRecognitionAvailable && !isOnDeviceAvailable) {
                         Log.e(logTag, "Speech recognition not available on this device")
                         activeResult?.error(
                             SpeechToTextErrors.recognizerNotAvailable.name,
@@ -513,7 +513,9 @@ public class SpeechToTextPlugin :
                         return
                     }
                 } else {
-                    if (!SpeechRecognizer.isRecognitionAvailable(localContext)) {
+                    val isRecognitionAvailable = SpeechRecognizer.isRecognitionAvailable(localContext)
+                    debugLog("SDK<S: isRecognitionAvailable=$isRecognitionAvailable")
+                    if (!isRecognitionAvailable) {
                         Log.e(logTag, "Speech recognition not available on this device")
                         activeResult?.error(
                             SpeechToTextErrors.recognizerNotAvailable.name,
@@ -523,6 +525,7 @@ public class SpeechToTextPlugin :
                         return
                     }
                 }
+                debugLog("Recognition available, calling setupBluetooth")
                 setupBluetooth()
             } else {
                 debugLog("null context during initialization")
@@ -533,6 +536,8 @@ public class SpeechToTextPlugin :
                 activeResult = null
                 return
             }
+        } else {
+            debugLog("completeInitialize: no audio permission, skipping recognition setup")
         }
 
         initializedSuccessfully = permissionToRecordAudio
@@ -543,12 +548,16 @@ public class SpeechToTextPlugin :
     }
 
     private fun setupBluetooth() {
+        debugLog("setupBluetooth: bluetoothDisabled=$bluetoothDisabled")
         if ( bluetoothDisabled ) return
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        debugLog("setupBluetooth: bluetoothAdapter=$bluetoothAdapter")
         pairedDevices = bluetoothAdapter?.getBondedDevices()
+        debugLog("setupBluetooth: pairedDevices count=${pairedDevices?.size ?: 0}")
 
         val mProfileListener: BluetoothProfile.ServiceListener = object : BluetoothProfile.ServiceListener {
             override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
+                debugLog("onServiceConnected: profile=$profile")
                 if (profile == BluetoothProfile.HEADSET) {
                     bluetoothHeadset = proxy as BluetoothHeadset
                     debugLog("Found a headset: " + bluetoothHeadset.toString())
@@ -556,12 +565,14 @@ public class SpeechToTextPlugin :
             }
 
             override fun onServiceDisconnected(profile: Int) {
+                debugLog("onServiceDisconnected: profile=$profile")
                 if (profile == BluetoothProfile.HEADSET) {
                     debugLog("Clearing headset: ")
                     bluetoothHeadset = null
                 }
             }
         }
+        debugLog("setupBluetooth: requesting HEADSET profile proxy")
         bluetoothAdapter?.getProfileProxy(pluginContext, mProfileListener, BluetoothProfile.HEADSET)
     }
 
