@@ -645,30 +645,38 @@ public class SpeechToTextPlugin :
             handler.post {
                 run {
                     recognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                        debugLog("In RecognizerIntent apply")
+                        val defaultLang = Locale.getDefault().toLanguageTag()
+                        debugLog("Building RecognizerIntent: listenMode=$listenMode, languageTag=$languageTag, defaultLang=$defaultLang, partialResults=$partialResults, onDevice=$onDevice")
                         if (listenMode == ListenMode.search) {
                             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH)
+                            debugLog("RecognizerIntent: model=WEB_SEARCH")
                         }
                         else {
                             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                            debugLog("RecognizerIntent: model=FREE_FORM")
                         }
-                        debugLog("put model")
                         val localContext = pluginContext
                         if (null != localContext) {
-                            putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,
-                                    localContext.applicationInfo.packageName)
+                            val packageName = localContext.applicationInfo.packageName
+                            putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, packageName)
+                            debugLog("RecognizerIntent: callingPackage=$packageName")
+                        } else {
+                            debugLog("RecognizerIntent: skipping callingPackage, context is null")
                         }
-                        debugLog("put package")
                         putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, partialResults)
-                        debugLog("put partial")
-                        if (languageTag != Locale.getDefault().toLanguageTag()) {
+                        debugLog("RecognizerIntent: partialResults=$partialResults")
+                        if (languageTag != defaultLang) {
                             putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageTag);
-                            debugLog("put languageTag")
+                            debugLog("RecognizerIntent: language override set to $languageTag (default=$defaultLang)")
+                        } else {
+                            debugLog("RecognizerIntent: using default language ($defaultLang), no override")
                         }
                         if ( onDevice ) {
                             putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, onDevice );
+                            debugLog("RecognizerIntent: preferOffline=true")
                         }
-                        putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,10)
+                        putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10)
+                        debugLog("RecognizerIntent: maxResults=10, intent build complete")
                     }
                 }
             }
